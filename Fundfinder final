@@ -1,0 +1,44 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import pandas as pd
+
+# Set up the WebDriver with the Service class using ChromeDriver path
+service = Service('C:/Users/jmes9/Downloads/chromedriver-win32/chromedriver-win32/chromedriver.exe')
+driver = webdriver.Chrome(service=service)
+driver.get("https://www.fundfinder.live/")
+wait = WebDriverWait(driver, 10)
+
+# Find all investor links that trigger popovers
+investor_links = driver.find_elements(By.CSS_SELECTOR, '[class*="css-1t72avv"]')  # Adjust selector as needed
+investors_data = []
+
+# Loop through each link to access each investor's popover
+for link in investor_links:
+    # Click on the investor link to open the popover
+    webdriver.ActionChains(driver).move_to_element(link).click(link).perform()
+    wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'css-1hyxt6o')))  # Wait for the popover to be visible
+
+    # Extract all text from the visible popover
+    popover = driver.find_element(By.CLASS_NAME, 'css-1hyxt6o')  # Ensure this is the correct class for the popover container
+    popover_text = popover.text
+
+    # Append the content to your data list
+    investors_data.append({
+        "Investor Name": link.text.strip(),
+        "Details": popover_text
+    })
+
+    # Optionally, close the popover if necessary 
+    body = driver.find_element(By.CSS_SELECTOR, 'body')
+    webdriver.ActionChains(driver).move_to_element(body).click().perform()
+
+# Convert the data list into a DataFrame
+df = pd.DataFrame(investors_data)
+df.to_excel('investor_popover_details.xlsx', index=False)  # Save the details to an Excel file
+
+print(df) 
+
+driver.quit()
