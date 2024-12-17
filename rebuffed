@@ -19,17 +19,22 @@ try:
     investors_data = []
 
     for link in investor_links:
-        # Click on the investor link to open the popover
-        webdriver.ActionChains(driver).move_to_element(link).click(link).perform()
+        # Scroll into view and click on the investor link to open the popover
+        driver.execute_script("arguments[0].scrollIntoView();", link)
+        link.click()  # Simplified click, assuming popovers do not overlap
         popover = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'css-1hyxt6o')))
         popover_text = popover.text
-        print(f"Scraped text from popover: {popover_text[:100]}")  # Print first 100 chars of popover text
 
         if popover_text:
             investors_data.append({
                 "Investor Name": link.text.strip(),
                 "Details": popover_text
             })
+
+        # Find and click the body or close button to ensure the popover closes
+        close_button = popover.find_element(By.CSS_SELECTOR, 'button[title="Close"], button[aria-label="Close"]')
+        close_button.click()
+        wait.until(EC.invisibility_of_element(popover))  # Wait until the popover disappears
 
     # Convert the data list into a DataFrame
     df = pd.DataFrame(investors_data)
