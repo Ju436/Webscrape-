@@ -1,0 +1,41 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import pandas as pd
+
+# Set up the WebDriver
+service = Service('C:/Users/jmes9/Downloads/chromedriver-win32/chromedriver-win32/chromedriver.exe')
+driver = webdriver.Chrome(service=service)
+driver.get("https://www.fundfinder.live/")
+wait = WebDriverWait(driver, 20)  # Increased timeout for waiting
+
+try:
+    # Find all investor links that trigger popovers
+    investor_links = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, '[class*="css-1t72avv"]')))
+    print(f"Found {len(investor_links)} investor links")  # Debugging statement
+
+    investors_data = []
+
+    for link in investor_links:
+        # Click on the investor link to open the popover
+        webdriver.ActionChains(driver).move_to_element(link).click(link).perform()
+        popover = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'css-1hyxt6o')))
+        popover_text = popover.text
+        print(f"Scraped text from popover: {popover_text[:100]}")  # Print first 100 chars of popover text
+
+        if popover_text:
+            investors_data.append({
+                "Investor Name": link.text.strip(),
+                "Details": popover_text
+            })
+
+    # Convert the data list into a DataFrame
+    df = pd.DataFrame(investors_data)
+    df.to_excel('investor_popover_details.xlsx', index=False)
+
+    print(df)  # Print the DataFrame to see the output
+
+finally:
+    driver.quit()  # Ensure the driver closes regardless of success/failure
