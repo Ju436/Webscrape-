@@ -1,0 +1,25 @@
+import requests
+import pandas as pd
+
+# API endpoint
+url = 'https://api.airtable.com/v0/appfjhXoVatBq63KO/tblvlPGPAMfQfrxch?'
+
+# Headers including the authorization token (replace with your actual token)
+headers = {
+    'Authorization': 'Bearer pat4VoYe2fP6nFX5m.39924930f283db9099b9b93cc2255df0d4b9502dfe372656b7cf06385d5c6c45',
+    'Content-Type': 'application/json'
+}
+
+# Make the GET request
+response = requests.get(url, headers=headers)
+
+# Check if the request was successful
+if response.status_code == 200:
+    data = response.json()
+    # Assuming the data structure is straightforward and directly parsable
+    df = pd.DataFrame(data['records'])  # Adjust this depending on the actual data structure
+    print(df)
+    df.to_excel('output_data.xlsx', index=False)
+else:
+    print('Failed to fetch data:', response.status_code)
+
